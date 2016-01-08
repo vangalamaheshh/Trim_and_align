@@ -51,36 +51,32 @@ rule run_trim_pe:
         right_paired_trim="analysis/trimmomatic/{sample}/{sample}.right.paired.trim.fastq.gz",
         left_unpaired_trim="analysis/trimmomatic/{sample}/{sample}.left.unpaired.trim.fastq.gz",
         right_unpaired_trim="analysis/trimmomatic/{sample}/{sample}.right.unpaired.trim.fastq.gz",
-        trim_log="analysis/trimmomatic/{sample}/{sample}.trim.log"
-    log:
-        "analysis/trimmomatic/{sample}/{sample}.trim.log"
+        trim_log="analysis/trimmomatic/{sample}/{sample}.trim.pe.log"
     params:
         PE_adapter="/zfs/cores/mbcf/mbcf-storage/devel/umv/software/Trimmomatic-0.32/adapters/TruSeq3-PE.fa"
     threads: 4
     shell:
         "java -jar /zfs/cores/mbcf/mbcf-storage/devel/umv/software/Trimmomatic-0.32/trimmomatic-0.32.jar "
         " PE -threads {threads} {input} {output.left_paired_trim} {output.left_unpaired_trim} {output.right_paired_trim} {output.right_unpaired_trim}"
-        " ILLUMINACLIP:{params.PE_adapter}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:36 >&{log}" 
+        " ILLUMINACLIP:{params.PE_adapter}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:36 >&{output.trim_log}" 
        
 rule run_trim_se:
     input:
         get_fastq
     output:
         "analysis/trimmomatic/{sample}/{sample}.single.trim.fastq.gz",
-        "analysis/trimmomatic/{sample}/{sample}.trim.log"
-    log:
-        "analysis/trimmomatic/{sample}/{sample}.trim.log"
+        "analysis/trimmomatic/{sample}/{sample}.trim.se.log"
     params:
         SE_adapter="/zfs/cores/mbcf/mbcf-storage/devel/umv/software/Trimmomatic-0.32/adapters/TruSeq3-SE.fa"
     threads: 4
     shell:
         "java -jar /zfs/cores/mbcf/mbcf-storage/devel/umv/software/Trimmomatic-0.32/trimmomatic-0.32.jar "
         " SE -threads {threads} {input} {output[0]}"
-        " ILLUMINACLIP:{params.SE_adapter}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:36 >&{log}"
+        " ILLUMINACLIP:{params.SE_adapter}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:36 >&{output[1]}"
 
 rule trim_report_pe:
     input:
-        trim_log_files = expand( "analysis/trimmomatic/{sample}/{sample}.trim.log", sample=file_info.keys() )
+        trim_log_files = expand( "analysis/trimmomatic/{sample}/{sample}.trim.pe.log", sample=file_info.keys() )
     output:
         trim_report="analysis/trimmomatic/trim_pe_report.tab",
         trim_plot="analysis/trimmomatic/trim_pe_report.png"
@@ -91,7 +87,7 @@ rule trim_report_pe:
 
 rule trim_report_se:
     input:
-        trim_log_files = expand( "analysis/trimmomatic/{sample}/{sample}.trim.log", sample=file_info.keys() )
+        trim_log_files = expand( "analysis/trimmomatic/{sample}/{sample}.trim.se.log", sample=file_info.keys() )
     output:
         trim_report="analysis/trimmomatic/trim_se_report.tab",
         trim_plot="analysis/trimmomatic/trim_se_report.png"
