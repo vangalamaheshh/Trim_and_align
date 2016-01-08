@@ -22,14 +22,21 @@ def get_fastq( wildcards ):
     return [ os.path.join( "concat_per_sample_fastq", f ) for f in file_info[wildcards.sample] ]
 
 def trim_output( wildcards ):
+    trim_out_files = []
+    for sample in file_info.keys():
+        if( paired_end ):
+            trim_out_files.append( "analysis/trimmomatic/" + sample + "/" + sample + ".left.paired.trim.fastq.gz" )
+            trim_out_files.append( "analysis/trimmomatic/" + sample + "/" + sample + ".right.paired.trim.fastq.gz" )
+        else:
+            trim_out_files.append( "analysis/trimmomatic/" + sample + "/" + sample + ".single.trim.fastq.gz" )
     
+    return trim_out_files
 
 rule target:
     input:
-        expand( "analysis/trimmomatic/{sample}/{sample}.left.paired.trim.fastq.gz", sample=file_info.keys() ),
-        expand( "analysis/trimmomatic/{sample}/{sample}.right.paired.trim.fastq.gz", sample=file_info.keys() )
+        trim_output
 
-rule run_trim:
+rule run_trim_pe:
     input:
         get_fastq
     output:
@@ -47,4 +54,25 @@ rule run_trim:
         " PE -threads {threads} {input} {output.left_paired_trim} {output.left_unpaired_trim} {output.right_paired_trim} {output.right_unpaired_trim}"
         " ILLUMINACLIP:{params.PE_adapter}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:36 >&{log}" 
        
- 
+rule run_trim_se:
+    input:
+        get_fastq
+    output:
+        "analysis/trimmomatic/{sample}/{sample}.single.trim.fastq.gz"
+    log:
+        "analysis/trimmomatic/{sample}/{sample}.trim.log"
+    params:
+        SE_adapter="/zfs/cores/mbcf/mbcf-storage/devel/umv/software/Trimmomatic-0.32/adapters/TruSeq3-SE.fa"
+    threads: 4
+    shell:
+        "java -jar /zfs/cores/mbcf/mbcf-storage/devel/umv/software/Trimmomatic-0.32/trimmomatic-0.32.jar "
+        " SE -threads {threads} {input} {output}"
+        " ILLUMINACLIP:{params.SE_adapter}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:36 >&{log}"
+
+
+
+
+
+
+
+
