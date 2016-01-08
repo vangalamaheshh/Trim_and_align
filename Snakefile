@@ -6,7 +6,7 @@ file_info = defaultdict(list)
 
 paired_end = False
 
-with open( "meta.csv", "r" ) as meta_fh:
+with open( "metasheet.csv", "r" ) as meta_fh:
     next(meta_fh)
     for line in meta_fh:
         info = line.strip().split(",")
@@ -91,10 +91,12 @@ rule trim_report_se:
     input:
         trim_log_files = expand( "analysis/trimmomatic/{sample}/{sample}.trim.log", sample=file_info.keys() )
     output:
-        "analysis/trimmomatic/trim_se_report.tab"
+        trim_report="analysis/trimmomatic/trim_se_report.tab",
+        trim_plot="analysis/trimmomatic/trim_se_report.png"
     run:
         log_file_list = " -l ".join( input.trim_log_files )
-        shell( "perl trim_and_align/scripts/trim_report_se.pl -f {log_file_list} 1>{output}" )
+        shell( "perl trim_and_align/scripts/trim_report_se.pl -f {log_file_list} 1>{output.trim_report}" )
+        shell( "Rscript trim_and_align/scripts/trim_plot_se.R {output.trim_report} {output.trim_plot}" )
 
 
 
