@@ -4,14 +4,25 @@ import os
 from collections import defaultdict
 file_info = defaultdict(list)
 
+paired_end = False
+
 with open( "meta.csv", "r" ) as meta_fh:
     next(meta_fh)
     for line in meta_fh:
         info = line.strip().split(",")
-        file_info[info[1]] = [info[0], info[0].replace("_R1_", "_R2_") ]
+        right_mate = info[0].replace("_R1_", "_R2_")
+        if os.path.isfile("./concat_per_sample_fastq/" + right_mate):
+            file_info[info[1]] = [info[0], right_mate]
+            paired_end = True
+        else:
+            file_info[info[1]] = [info[0]]
+            
 
 def get_fastq( wildcards ):
     return [ os.path.join( "concat_per_sample_fastq", f ) for f in file_info[wildcards.sample] ]
+
+def trim_output( wildcards ):
+    
 
 rule target:
     input:
