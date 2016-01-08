@@ -41,7 +41,6 @@ def trim_report( wildcards ):
 rule target:
     input:
         trim_output,
-        expand( "analysis/trimmomatic/{sample}/{sample}.trim.log", sample=file_info.keys() ),
         trim_report
 
 rule run_trim_pe:
@@ -51,7 +50,8 @@ rule run_trim_pe:
         left_paired_trim="analysis/trimmomatic/{sample}/{sample}.left.paired.trim.fastq.gz",
         right_paired_trim="analysis/trimmomatic/{sample}/{sample}.right.paired.trim.fastq.gz",
         left_unpaired_trim="analysis/trimmomatic/{sample}/{sample}.left.unpaired.trim.fastq.gz",
-        right_unpaired_trim="analysis/trimmomatic/{sample}/{sample}.right.unpaired.trim.fastq.gz"
+        right_unpaired_trim="analysis/trimmomatic/{sample}/{sample}.right.unpaired.trim.fastq.gz",
+        trim_log="analysis/trimmomatic/{sample}/{sample}.trim.log"
     log:
         "analysis/trimmomatic/{sample}/{sample}.trim.log"
     params:
@@ -66,7 +66,8 @@ rule run_trim_se:
     input:
         get_fastq
     output:
-        "analysis/trimmomatic/{sample}/{sample}.single.trim.fastq.gz"
+        "analysis/trimmomatic/{sample}/{sample}.single.trim.fastq.gz",
+        "analysis/trimmomatic/{sample}/{sample}.trim.log"
     log:
         "analysis/trimmomatic/{sample}/{sample}.trim.log"
     params:
@@ -74,7 +75,7 @@ rule run_trim_se:
     threads: 4
     shell:
         "java -jar /zfs/cores/mbcf/mbcf-storage/devel/umv/software/Trimmomatic-0.32/trimmomatic-0.32.jar "
-        " SE -threads {threads} {input} {output}"
+        " SE -threads {threads} {input} {output[0]}"
         " ILLUMINACLIP:{params.SE_adapter}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:36 >&{log}"
 
 rule trim_report_pe:
