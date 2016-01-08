@@ -41,6 +41,7 @@ def trim_report( wildcards ):
 rule target:
     input:
         trim_output,
+        expand( "analysis/trimmomatic/{sample}/{sample}.trim.log", sample=file_info.keys() ),
         trim_report
 
 rule run_trim_pe:
