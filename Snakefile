@@ -4,7 +4,14 @@ import os
 from collections import defaultdict
 file_info = defaultdict(list)
 
+configfile: "config.yaml"
+strand_command=""
 paired_end = False
+
+if( config["stranded"] ):
+    strand_command="--outFilterIntronMotifs RemoveNoncanonical"
+else:
+    strand_command="--outSAMstrandField intronMotif"
 
 with open( "metasheet.csv", "r" ) as meta_fh:
     next(meta_fh)
@@ -20,6 +27,13 @@ with open( "metasheet.csv", "r" ) as meta_fh:
 
 def get_fastq( wildcards ):
     return [ os.path.join( "concat_per_sample_fastq", f ) for f in file_info[wildcards.sample] ]
+
+def get_trim_fastq( wildcards ):
+    if( paired_end ):
+        return [ "analysis/trimmomatic/" + wildcards.sample + "/" + wildcards.sample + ".left.paired.trim.fastq.gz",
+        "analysis/trimmomatic/" + wildcards.sample + "/" + wildcards.sample + ".right.paired.trim.fastq.gz" ]
+    else:
+        return [ "analysis/trimmomatic/" + wildcards.sample + "/" + wildcards.sample + ".single.trim.fastq.gz" ]
 
 def trim_output( wildcards ):
     trim_out_files = []
@@ -41,7 +55,10 @@ def trim_report( wildcards ):
 rule target:
     input:
         trim_output,
-        trim_report
+        trim_report,
+        "analysis/STAR/STAR_Align_Report.csv",
+        "analysis/STAR/STAR_Align_Report.png",
+        "analysis/STAR/STAR_Gene_Counts.csv"
 
 rule run_trim_pe:
     input:
@@ -97,7 +114,40 @@ rule trim_report_se:
         shell( "Rscript trim_and_align/scripts/trim_plot_se.R {output.trim_report} {output.trim_plot}" )
 
 
+rule run_STAR:
+    input:
+        get_trim_fastq
+    output:
+        bam="analysis/STAR/{sample}/{sample}.sorted.bam",
+        counts="analysis/STAR/{sample}/{sample}.counts.tab",
+        log_file="analysis/STAR/{sample}/{sample}.Log.final.out"
+    params:
+        stranded=strand_command,
+        prefix=lambda wildcards: "analysis/STAR/{sample}/{sample}".format(sample=wildcards.sample),
+        readgroup=lambda wildcards: "ID:{sample} PL:illumina LB:{sample} SM:{sample}".format(sample=wildcards.sample)
+    threads: 8
+    shell:
+        "/zfs/cores/mbcf/mbcf-storage/devel/umv/software/STAR/STAR-STAR_2.4.2a/source/STAR --runMode alignReads --runThreadN {threads} --genomeDir {config[star_index]}"
+        " --readFilesIn {input} --readFilesCommand zcat --outFileNamePrefix {params.prefix}."
+        "  --outSAMmode Full --outSAMattributes All {params.stranded} --outSAMattrRGline {params.readgroup} --outSAMtype BAM SortedByCoordinate"
+        "  --limitBAMsortRAM 45000000000 --quantMode GeneCounts"
+        " && mv {params.prefix}.Aligned.sortedByCoord.out.bam {output.bam}"
+        " && mv {params.prefix}.ReadsPerGene.out.tab {output.counts}"
+        " && /usr/bin/samtools index {output.bam}"
 
-
+rule generate_STAR_report:
+    input:
+        star_log_files=expand( "analysis/STAR/{sample}/{sample}.Log.final.out", sample=file_info.keys() ),
+        star_gene_count_files=expand( "analysis/STAR/{sample}/{sample}.counts.tab", sample=file_info.keys() )
+    output:
+        csv="analysis/STAR/STAR_Align_Report.csv",
+        png="analysis/STAR/STAR_Align_Report.png",
+        gene_counts="analysis/STAR/STAR_Gene_Counts.csv"
+    run:
+        log_files = " -l ".join( input.star_log_files )
+        count_files = " -f ".join( input.star_gene_count_files )
+        shell( "perl trim_and_align/scripts/STAR_reports.pl -l {log_files} 1>{output.csv}" )
+        shell( "Rscript trim_and_align/scripts/map_stats.R {output.csv} {output.png}" )
+        shell( "perl trim_and_align/scripts/raw_and_fpkm_count_matrix.pl -f {count_files} 1>{output.gene_counts}" )
 
 
