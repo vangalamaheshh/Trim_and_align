@@ -150,4 +150,17 @@ rule generate_STAR_report:
         shell( "Rscript trim_and_align/scripts/map_stats.R {output.csv} {output.png}" )
         shell( "perl trim_and_align/scripts/raw_and_fpkm_count_matrix.pl -f {count_files} 1>{output.gene_counts}" )
 
-
+rule copy_output:
+    input:
+        trim_dir="analysis/trimmomatic",
+        star_dir="analysis/STAR"
+    output:
+        trim_dir="analysis/final_output/trimmed_fastq/",
+        align_dir="analysis/final_output/alignment/",
+        sum_dir="analysis/final_output/summary/"
+    shell:
+        "cp -rf {input.trim_dir} {output.trim_dir}"
+        " && cp -rf {input.star_dir} {output.align_dir}"
+        " && cp {input.trim_dir}/trim_*.png {output.sum_dir}/"
+        " && cp {input.trim_dir}/trim_*.tab {output.sum_dir}/"
+        " && cp {input.star_dir}/STAR_Align_Report.* {output.sum_dir}/"
