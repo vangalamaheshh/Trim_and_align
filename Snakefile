@@ -152,15 +152,15 @@ rule generate_STAR_report:
 
 rule copy_output:
     input:
-        trim_dir="analysis/trimmomatic",
-        star_dir="analysis/STAR"
+        trim_dir="analysis/trimmomatic/",
+        star_dir="analysis/STAR/"
     output:
         trim_dir="analysis/final_output/trimmed_fastq/",
         align_dir="analysis/final_output/alignment/",
         sum_dir="analysis/final_output/summary/"
     shell:
-        "cp -rf {input.trim_dir} {output.trim_dir}"
-        " && cp -rf {input.star_dir} {output.align_dir}"
+        "cp -rf {input.trim_dir}/* {output.trim_dir}/"
+        " && cp -rf {input.star_dir}/* {output.align_dir}/"
         " && cp {input.trim_dir}/trim_*.png {output.sum_dir}/"
         " && cp {input.trim_dir}/trim_*.tab {output.sum_dir}/"
         " && cp {input.star_dir}/STAR_Align_Report.* {output.sum_dir}/"
