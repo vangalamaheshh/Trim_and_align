@@ -160,7 +160,7 @@ rule copy_output:
         sum_dir="analysis/final_output/summary/"
     shell:
         "cp -rf {input.trim_dir}/* {output.trim_dir}/"
-        " && cp -rf {input.star_dir}/* {output.align_dir}/"
+        " && find {input.star_dir}/ -type f -name '*sorted.ba*' -exec cp -ft {output.align_dir}/ {{}} \;"
         " && cp {input.trim_dir}/trim_*.png {output.sum_dir}/"
         " && cp {input.trim_dir}/trim_*.tab {output.sum_dir}/"
         " && cp {input.star_dir}/STAR_Align_Report.* {output.sum_dir}/"
