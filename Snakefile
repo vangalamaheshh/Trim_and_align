@@ -1,5 +1,6 @@
 # vim: syntax=python tabstop=4 expandtab
 # coding: utf-8
+#
 import os
 from collections import defaultdict
 file_info = defaultdict(list)
