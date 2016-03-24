@@ -100,7 +100,7 @@ rule trim_report_pe:
         trim_plot="analysis/trimmomatic/trim_pe_report.png"
     run:
         log_file_list = " -l ".join( input.trim_log_files )
-        shell( "perl trim_and_align/scripts/trim_report_pe.pl -f {log_file_list} 1>{output.trim_report}" )
+        shell( "perl trim_and_align/scripts/trim_report_pe.pl -l {log_file_list} 1>{output.trim_report}" )
         shell( "Rscript trim_and_align/scripts/trim_plot_pe.R {output.trim_report} {output.trim_plot}" )
 
 rule trim_report_se:
@@ -111,7 +111,7 @@ rule trim_report_se:
         trim_plot="analysis/trimmomatic/trim_se_report.png"
     run:
         log_file_list = " -l ".join( input.trim_log_files )
-        shell( "perl trim_and_align/scripts/trim_report_se.pl -f {log_file_list} 1>{output.trim_report}" )
+        shell( "perl trim_and_align/scripts/trim_report_se.pl -l {log_file_list} 1>{output.trim_report}" )
         shell( "Rscript trim_and_align/scripts/trim_plot_se.R {output.trim_report} {output.trim_plot}" )
 
 
