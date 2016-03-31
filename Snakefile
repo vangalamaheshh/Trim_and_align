@@ -71,7 +71,7 @@ rule run_trim_pe:
         right_unpaired_trim="analysis/trimmomatic/{sample}/{sample}.right.unpaired.trim.fastq.gz",
         trim_log="analysis/trimmomatic/{sample}/{sample}.trim.pe.log"
     params:
-        PE_adapter="/zfs/cores/mbcf/mbcf-storage/devel/umv/software/Trimmomatic-0.32/adapters/TruSeq3-PE.fa"
+        PE_adapter="/zfs/cores/mbcf/mbcf-storage/devel/umv/software/Trimmomatic-0.32/adapters/TRUSEQ_NEXTERA_PE.fa"
     threads: 4
     shell:
         "java -jar /zfs/cores/mbcf/mbcf-storage/devel/umv/software/Trimmomatic-0.32/trimmomatic-0.32.jar "
@@ -85,7 +85,7 @@ rule run_trim_se:
         "analysis/trimmomatic/{sample}/{sample}.single.trim.fastq.gz",
         "analysis/trimmomatic/{sample}/{sample}.trim.se.log"
     params:
-        SE_adapter="/zfs/cores/mbcf/mbcf-storage/devel/umv/software/Trimmomatic-0.32/adapters/TruSeq3-SE.fa"
+        SE_adapter="/zfs/cores/mbcf/mbcf-storage/devel/umv/software/Trimmomatic-0.32/adapters/TRUSEQ_NEXTERA_SE.fa"
     threads: 4
     shell:
         "java -jar /zfs/cores/mbcf/mbcf-storage/devel/umv/software/Trimmomatic-0.32/trimmomatic-0.32.jar "
